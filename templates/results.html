@@ -28,25 +28,13 @@
     </style>
 </head>
 <body>
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
     <h1>Recommended Songs</h1>
-    <div id="results"></div>
+    <ul>
+        {% for chanson in chansons_selectionnees %}
+            <li>{{ chanson.track_name }}</li>
+            <!-- <li>(Similarité : {{ chanson.similarity_score }})</li> -->
+        {% endfor %}
+    </ul>
 
-    <script>
-        // Récupérer les données JSON depuis le template Flask
-        const chansonsSelectionnees = JSON.parse('{{ chansons_selectionnees | safe }}');
-
-        // Afficher les résultats
-        const resultsContainer = document.getElementById('results');
-        const ul = document.createElement('ul');
-
-        chansonsSelectionnees.forEach(chanson => {
-            const li = document.createElement('li');
-            li.textContent = chanson;
-            ul.appendChild(li);
-        });
-
-        resultsContainer.appendChild(ul);
-    </script>
 </body>
 </html>
