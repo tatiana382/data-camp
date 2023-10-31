@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- <meta charset="utf-8"> -->
+    <title>ElasticSearch Flask Autosuggestions</title>
+    <style>
+        .container {
+            display: flex;
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .title {
+            margin-top: 100px ;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 50px; 
+            color: #333;
+        }
+
+        .search-container {
+            flex: 1;
+            padding-right: 10px;
+            position: relative;
+        }
+
+        .search-box {
+            width: calc(100% - 20px);
+            padding: 10px; 
+            border: 1px solid #ccc;
+            font-size: 16px; 
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box; 
+        }
+
+        .results-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px; 
+        }
+
+        .results {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            width: calc(100% - 14px);
+            border: 1px solid #ccc;
+            border-top: none;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            display: none;
+            z-index: 1;
+            background-color: rgba(255, 255, 255, 0.9);
+            margin-top: -10px;
+        }
+
+        .results li {
+            cursor: pointer;
+            padding: 10px; 
+            border-bottom: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            width: 97%;
+        }
+
+        .results li:last-child {
+            border-bottom: none;
+        }
+
+        .results li:hover {
+            background-color: #f9f9f9;
+        }
+
+        .selected-results {
+            border-radius: 5px;
+            padding: 20px; 
+            margin-bottom: 20px;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px; 
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px; 
+        }
+
+        .result-item {
+            flex-grow: 1;
+        }
+
+        .delete-btn {
+            background-color: rgb(240, 80, 80); 
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px; 
+            cursor: pointer;
+            font-size: 16px; 
+            transition: background-color 0.3s; 
+        }
+
+        .delete-btn:hover {
+            background-color: #bd4509; 
+        }
+
+        #boutonResultat {
+            background-color: #fff; 
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 20px; 
+            cursor: pointer;
+            font-size: 13px; 
+            transition: background-color 0.3s; 
+            display: block; 
+            margin: auto; 
+            margin-top: 20px; 
+        }
+
+        #boutonResultat:hover {
+            background-color: #f9f9f9; 
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+  <div class="title">
+    <h2>    Select the songs that you like and we will recommend you some songs
+    </h2>
+  </div>
+    <div class="container">
+        <div class="search-container">
+            <input class="search-box" placeholder="Search...">
+            <ul class="results"></ul>
+        </div>
+        <div class="results-container">
+            <div class="selected-results">
+                <!-- This is where the selected items will be displayed -->
+            </div>
+            <button id="boutonResultat">Send songs</button>
+        </div>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    $(document).ready(function() {
+        let debounce;
+        $('.search-box').on('keyup', function (e) { 
+            clearTimeout(debounce)
+            debounce = setTimeout(() => {
+                getAutoComplete();  
+            }, 300);
+        });
+
+        // Event listener for selecting a result
+        $('.results').on('click', 'li', function() {
+            const selectedValue = $(this).text();
+            addResult(selectedValue);
+        });
+
+        // Event listener for removing a result
+        $('.selected-results').on('click', '.delete-btn', function() {
+            $(this).parent().remove();
+        });
+    });
+
+    function getAutoComplete() {
+        const query = $('.search-box').val();
+        fetch(`http://127.0.0.1:5000/search?q=${encodeURIComponent(query.trim())}`)
+            .then((resp) => resp.json())
+            .then((data) => {
+                const resultsContainer = $('.results');
+                resultsContainer.empty();
+                for (let i = 0; i < data.length; i++) {
+                    resultsContainer.append(`<li>${data[i]}</li>`);
+                }
+                resultsContainer.css('display', data.length > 0 ? 'block' : 'none');
+            });
+    }
+
+    function addResult(value) {
+        const resultRow = `
+            <div class="result-row">
+                <div class="result-item">${value}</div>
+                <button class="delete-btn">Delete</button>
+            </div>
+        `;
+        $('.selected-results').append(resultRow);
+    }
+
+    document.getElementById('boutonResultat').addEventListener('click', function() {
+        envoyerChansons();
+
+        const resultContainer = document.querySelector('.selected-results');
+        const resultItems = resultContainer.querySelectorAll('.result-item');
+        const chansonsSelectionnees = [];
+
+        resultItems.forEach(item => {
+            const chanson = item.textContent;
+            chansonsSelectionnees.push(chanson);
+        });
+
+        const url = `/results?chansons=${encodeURIComponent(JSON.stringify(chansonsSelectionnees))}`;
+        window.location.href = url;
+    });
+
+
+    function envoyerChansons() {
+      const resultContainer = document.querySelector('.selected-results');
+      const resultItems = resultContainer.querySelectorAll('.result-item');
+
+      const chansonsSelectionnees = [];
+
+      resultItems.forEach(item => {
+          const chanson = item.textContent;
+          chansonsSelectionnees.push(chanson);
+      });
+
+      // Vous avez maintenant la liste des chansons sélectionnées dans la variable "chansonsSelectionnees"
+      console.log(chansonsSelectionnees);
+
+  }
+</script>
+</body>
+</html>

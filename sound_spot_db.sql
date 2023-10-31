@@ -1,10 +1,8 @@
 -- Active: 1698594207995@@127.0.0.1@3306@sound_spot
--- CREATE DATABASE sound_spot
---     DEFAULT CHARACTER SET = 'utf8mb4';
+CREATE DATABASE sound_spot
+    DEFAULT CHARACTER SET = 'utf8mb4';
 
--- USE sound_spot;
-
--- SHOW TABLES;
+USE sound_spot;
 
 CREATE TABLE IF NOT EXISTS MAIN_ARTIST
 (
@@ -18,45 +16,27 @@ CREATE TABLE IF NOT EXISTS MAIN_ARTIST
 
 CREATE TABLE IF NOT EXISTS TRACK
 (
-    track_id            VARCHAR(50)        NOT NULL,
-    main_artist_id      VARCHAR(50)        NOT NULL,
-    released_date       DATE               NOT NULL,
-    track_name          VARCHAR(100)       NOT NULL,
-    track_popularity    INT(3)             NOT NULL,
-    other_artists       VARCHAR(100),
-    track_image_url     TEXT,
-    lyrics              TEXT,
+    track_id                          VARCHAR(50)        NOT NULL,
+    main_artist_id                    VARCHAR(50)        NOT NULL,
+    released_date                     DATE               NOT NULL,
+    loudness                          DECIMAL(8, 4),
+    tempo                             DECIMAL(8, 4),
+    tempo_confidence                  DECIMAL(8, 4),
+    time_signature                    DECIMAL(8, 4),
+    time_signature_confidence         DECIMAL(8, 4),
+    track_name                        VARCHAR(100)       NOT NULL,
+    track_popularity                  INT(3)             NOT NULL,
+    other_artists                     VARCHAR(100),
+    track_image_url                   TEXT,
+    lyrics                            TEXT,
     PRIMARY KEY (track_id),
     FOREIGN KEY (main_artist_id) REFERENCES MAIN_ARTIST(main_artist_id)
 );
 
-DELIMITER //
--- Trigger to avoid duplicate tracks
-CREATE TRIGGER check_existing_track
-BEFORE INSERT ON TRACK
-FOR EACH ROW
-BEGIN
-    IF EXISTS (SELECT 1 FROM TRACK WHERE track_id = NEW.track_id) OR
-       EXISTS (SELECT 1 FROM TRACK WHERE main_artist_id = NEW.main_artist_id) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'This track or main artist already exists in the database!';
-    END IF;
-END;
-//
+SHOW TABLES;
 
--- Trigger to avoid duplicate artists
-CREATE TRIGGER check_existing_main_artist
-BEFORE INSERT ON MAIN_ARTIST
-FOR EACH ROW
-BEGIN
-    IF EXISTS (SELECT 1 FROM MAIN_ARTIST WHERE main_artist_id = NEW.main_artist_id) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'This artist already exists in the database!';
-    END IF;
-END;
-//
-DELIMITER ;
+SELECT @@hostname;
 
-SHOW TRIGGERS;
+SELECT * FROM track;
 
--- SELECT * FROM track;
+DROP DATABASE sound_spot;

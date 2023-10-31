@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- <meta charset="utf-8"> -->
+    <title>Recommended Songs</title>
+    <style>
+        body {
+            text-align: center;
+            margin-top: 100px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 50px;
+
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+    <h1>Recommended Songs</h1>
+    <div id="results"></div>
+
+    <script>
+        // Récupérer les données JSON depuis le template Flask
+        const chansonsSelectionnees = JSON.parse('{{ chansons_selectionnees | safe }}');
+
+        // Afficher les résultats
+        const resultsContainer = document.getElementById('results');
+        const ul = document.createElement('ul');
+
+        chansonsSelectionnees.forEach(chanson => {
+            const li = document.createElement('li');
+            li.textContent = chanson;
+            ul.appendChild(li);
+        });
+
+        resultsContainer.appendChild(ul);
+    </script>
+</body>
+</html>
